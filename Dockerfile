@@ -8,3 +8,5 @@ ENV FLYWHEEL /flywheel/v0
 RUN mkdir -p ${FLYWHEEL}
 COPY run ${FLYWHEEL}/run
 COPY manifest.json ${FLYWHEEL}/manifest.json
+
+RUN chmod +x ${FLYWHEEL}/run
