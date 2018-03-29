@@ -63,7 +63,7 @@ fi
 ##############################################################################
 # Run the storescu algorithm passing ENV vars with config
 
-echo storescu --scan-directories -aet flywheel \
+storescu --scan-directories -aet flywheel \
   -aec ${config_called_ae} \
   ${config_destination} \
   ${config_port} \
