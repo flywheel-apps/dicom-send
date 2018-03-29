@@ -37,8 +37,6 @@
 	"source": "https://flywheel.io",
 	"url": "http://support.dcmtk.org/docs/storescu.html",
 	"custom": {
-		"gear-builder": {
-			"image": "dicomsend"
-		}
+		"docker-image": "flywheel/dicom-send:0.7.0"
 	}
 }
