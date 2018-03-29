@@ -2,11 +2,16 @@
 	"name": "dicom-send",
 	"label": "DICOM Send",
 	"description": "The DICOM Send Gear uses DCMTK dcmstoresu to send DICOM data from Flywheel to a DICOM server.  The DICOM server must be reachable from the host of the Flywheel instance.",
-	"version": "0.6.3",
+	"version": "0.9",
 	"inputs": {
 		"file": {
 			"base": "file",
-			"description": "Any DICOM file(s), or an archive containing DICOM file(s). Non DICOM files will be ignored."
+			"description": "Any DICOM file(s), or an archive containing DICOM file(s). Non DICOM files will be ignored.",
+			"type": {
+        		"enum": [
+          			"dicom"
+        		]
+      		}
 		}
 	},
 	"config": {
@@ -32,6 +37,6 @@
 	"source": "https://flywheel.io",
 	"url": "http://support.dcmtk.org/docs/storescu.html",
 	"custom": {
-			"docker-image": "flywheel/dicom-send:0.6.3"
+		"docker-image": "flywheel/dicom-send:0.9.0"
 	}
 }

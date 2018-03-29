@@ -51,12 +51,12 @@ elif [[ "$input_file" == *.gz ]]; then
   dicom_input=$(basename "$input_file" .gz)
 
 else
-  # Assume a directory containing dicoms was mounted in and pass it on 
+  # Assume a directory containing dicoms was mounted in and pass it on
   # (local docker execution)
   # or single .dcm file
-  
+
   dicom_input=$INPUT_DIR
-  cp $input_file $INPUT_DIR 
+  cp $input_file $INPUT_DIR
 fi
 
 
@@ -68,6 +68,7 @@ storescu --scan-directories -aet flywheel \
   ${config_destination} \
   ${config_port} \
   ${dicom_input} \
+
 
 
 
