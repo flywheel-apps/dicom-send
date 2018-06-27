@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Configure paths
 
 FLYWHEEL_BASE=/flywheel/v0
@@ -5,13 +7,33 @@ OUTPUT_DIR=$FLYWHEEL_BASE/output
 INPUT_DIR=$FLYWHEEL_BASE/input
 CONFIG_FILE=$FLYWHEEL_BASE/config.json
 
+##############################################################################
 # Parse configuration
-if [[ -f $CONFIG_FILE ]]; then
-  eval $(jq -r '.config | to_entries[] | "config_\(.key)=\"\(.value)\""' $CONFIG_FILE)
-else
-  CONFIG_FILE=$FLYWHEEL_BASE/manifest.json
-  eval $(jq -r '.config | to_entries[] | "config_\(.key)=\(.value.default)"' $CONFIG_FILE)
-fi
+
+# If the config file does not exist (i.e., local run) then parse the config
+# options and values from the manifest. Those variables can be found in the
+# manifest.json file within the `config` map.
+
+
+function parse_config {
+  # If config.json exists, then we parse config file  Otherwise we parse
+  # manifest.json.
+
+  CONFIG_FILE=$FLYWHEEL_BASE/config.json
+  MANIFEST_FILE=$FLYWHEEL_BASE/manifest.json
+
+  if [[ -f $CONFIG_FILE ]]; then
+    echo -e "$(cat $CONFIG_FILE | jq -r '.config.'$1)"
+  else
+    CONFIG_FILE=$MANIFEST_FILE
+    echo -e "$(cat $MANIFEST_FILE | jq -r '.config.'$1'.default')"
+  fi
+}
+
+config_called_ae="$(parse_config 'called_ae')"
+config_destination="$(parse_config 'destination')"
+config_port="$(parse_config 'port')"
+config_calling_ae="$(parse_config 'calling_ae')"
 
 
 # The input to this Gear can be either a zip, a tgz, or a mounted volume
@@ -34,11 +56,6 @@ if [[ "$input_file" == *.zip ]] ; then
   # Find unzipped directory in input dir
   dicom_input=$(find $INPUT_DIR/* -not -path '*/\.*' -type d | head -1)
 
-  # If there is no unzipped directory, check for PAR/REC files
-  if [[ -z "$dicom_input" ]]; then
-      dicom_input=$(find $INPUT_DIR/* -not -path '*/\.*' -type f -name "*.par" -o -name "*.PAR" | head -1)
-  fi
-
   # Zip bomb: Set dicom_input to INPUT_DIR
   if [[ -z "$dicom_input" ]]; then
     dicom_input=$INPUT_DIR
@@ -56,19 +73,15 @@ else
   # or single .dcm file
 
   dicom_input=$INPUT_DIR
-  cp $input_file $INPUT_DIR
+  cp -a $input_file $INPUT_DIR
 fi
 
 
 ##############################################################################
 # Run the storescu algorithm passing ENV vars with config
 
-storescu --scan-directories -aet flywheel \
-  -aec ${config_called_ae} \
-  ${config_destination} \
-  ${config_port} \
-  ${dicom_input} \
-
-
-
-
+storescu -v --scan-directories -aet "${config_calling_ae}" \
+  -aec "${config_called_ae}" \
+  "${config_destination}" \
+  "${config_port}" \
+  "${dicom_input}" \
