@@ -42,7 +42,6 @@ config_called_ae="$(parse_config 'called_ae')"
 config_destination="$(parse_config 'destination')"
 config_port="$(parse_config 'port')"
 config_calling_ae="$(parse_config 'calling_ae')"
-config_session="$(parse_config 'session')"
 
 # The input to this Gear can be either a zip, a tgz, or a mounted volume
 # containing DICOMs. Below we handle all those cases.
@@ -50,27 +49,24 @@ config_session="$(parse_config 'session')"
 input_file=$(find $INPUT_DIR/* -not -path '*/\.*' -type f | head -1)
 dicom_input=''
 
-
-if [[ $config_session == "true" ]] ; then
+if [[  -z "$input_file" ]] ; then
   # Get Session ID
   config_session_id="$(parse_config_file '.destination.id')"
   api_key="$(parse_config_file '.inputs.api_key.key')"
   echo -e "$CONTAINER No input file was found! Sending all dicoms in session"
-  python download_dicoms.py --api_key "${api_key}" --session "${config_session_id}" --input_dir $INPUT_DIR
-elif [[ -z "$input_file" ]] ; then
-  echo -e "$CONTAINER No input file was found and session configuration was not checked"
-  exit 1
+  python download_dicoms.py --api-key "${api_key}" --session "${config_session_id}" --input_dir $INPUT_DIR/file
 fi
 
-for input_file in $INPUT_DIR/*; do
+for input_file in $INPUT_DIR/file/*; do
   # Prepare inputs: unzip, gunzip, or uncompressed
   if [[ "$input_file" == *.zip ]] ; then
 
     echo "$CONTAINER  Unzipping $input_file"
+    dicom_input=$INPUT_DIR/$(unzip -Z -1 "${input_file}" | head -1)
     unzip -q "$input_file" -d $INPUT_DIR
 
     # Find unzipped directory in input dir
-    dicom_input=$(find $INPUT_DIR/* -not -path '*/\.*' -type d | head -1)
+    # dicom_input=$(find $INPUT_DIR/* -not -path '*/\.*' -type d | head -1)
 
     # Zip bomb: Set dicom_input to INPUT_DIR
     if [[ -z "$dicom_input" ]]; then
@@ -101,4 +97,12 @@ for input_file in $INPUT_DIR/*; do
     "${config_destination}" \
     "${config_port}" \
     "${dicom_input}" \
+
+  if [ $? -eq 0 ]; then
+    echo OK
+  else
+    echo "FAIL: $input_file"
+    exit 1
+  fi
+
 done
