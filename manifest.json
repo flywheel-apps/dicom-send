@@ -12,6 +12,9 @@
           "dicom"
         ]
       }
+    },
+    "api_key": {
+      "base": "api-key"
     }
   },
   "config": {
@@ -32,6 +35,11 @@
       "default": "104",
       "description": "Port number of the listening DICOM service. DEFAULT=104",
       "type": "number"
+    },
+    "session": {
+      "default": false,
+      "description": "Whether or not to send all dicoms in session",
+      "type": "boolean"
     }
   },
   "author": "Flywheel",

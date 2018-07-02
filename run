@@ -30,11 +30,19 @@ function parse_config {
   fi
 }
 
+function parse_config_file {
+  CONFIG_FILE=$FLYWHEEL_BASE/config.json
+
+  if [[ -f $CONFIG_FILE ]]; then
+    echo -e "$(cat $CONFIG_FILE | jq -r $1)"
+  fi
+}
+
 config_called_ae="$(parse_config 'called_ae')"
 config_destination="$(parse_config 'destination')"
 config_port="$(parse_config 'port')"
 config_calling_ae="$(parse_config 'calling_ae')"
-
+config_session="$(parse_config 'session')"
 
 # The input to this Gear can be either a zip, a tgz, or a mounted volume
 # containing DICOMs. Below we handle all those cases.
@@ -42,46 +50,55 @@ config_calling_ae="$(parse_config 'calling_ae')"
 input_file=$(find $INPUT_DIR/* -not -path '*/\.*' -type f | head -1)
 dicom_input=''
 
-if [[ -z "$input_file" ]] ; then
-  echo -e "$CONTAINER No input file was found!"
+
+if [[ $config_session == "true" ]] ; then
+  # Get Session ID
+  config_session_id="$(parse_config_file '.destination.id')"
+  api_key="$(parse_config_file '.inputs.api_key.key')"
+  echo -e "$CONTAINER No input file was found! Sending all dicoms in session"
+  python download_dicoms.py --api_key "${api_key}" --session "${config_session_id}" --input_dir $INPUT_DIR
+elif [[ -z "$input_file" ]] ; then
+  echo -e "$CONTAINER No input file was found and session configuration was not checked"
   exit 1
 fi
 
-# Prepare inputs: unzip, gunzip, or uncompressed
-if [[ "$input_file" == *.zip ]] ; then
+for input_file in $INPUT_DIR/*; do
+  # Prepare inputs: unzip, gunzip, or uncompressed
+  if [[ "$input_file" == *.zip ]] ; then
 
-  echo "$CONTAINER  Unzipping $input_file"
-  unzip -q "$input_file" -d $INPUT_DIR
+    echo "$CONTAINER  Unzipping $input_file"
+    unzip -q "$input_file" -d $INPUT_DIR
 
-  # Find unzipped directory in input dir
-  dicom_input=$(find $INPUT_DIR/* -not -path '*/\.*' -type d | head -1)
+    # Find unzipped directory in input dir
+    dicom_input=$(find $INPUT_DIR/* -not -path '*/\.*' -type d | head -1)
 
-  # Zip bomb: Set dicom_input to INPUT_DIR
-  if [[ -z "$dicom_input" ]]; then
+    # Zip bomb: Set dicom_input to INPUT_DIR
+    if [[ -z "$dicom_input" ]]; then
+      dicom_input=$INPUT_DIR
+    fi
+
+  elif [[ "$input_file" == *.gz ]]; then
+    cd $INPUT_DIR
+    echo "$CONTAINER  Gunzipping $input_file"
+    gunzip -q "$input_file"
+    dicom_input=$(basename "$input_file" .gz)
+
+  else
+    # Assume a directory containing dicoms was mounted in and pass it on
+    # (local docker execution)
+    # or single .dcm file
+
     dicom_input=$INPUT_DIR
+    cp -a $input_file $INPUT_DIR
   fi
 
-elif [[ "$input_file" == *.gz ]]; then
-  cd $INPUT_DIR
-  echo "$CONTAINER  Gunzipping $input_file"
-  gunzip -q "$input_file"
-  dicom_input=$(basename "$input_file" .gz)
 
-else
-  # Assume a directory containing dicoms was mounted in and pass it on
-  # (local docker execution)
-  # or single .dcm file
+  ##############################################################################
+  # Run the storescu algorithm passing ENV vars with config
 
-  dicom_input=$INPUT_DIR
-  cp -a $input_file $INPUT_DIR
-fi
-
-
-##############################################################################
-# Run the storescu algorithm passing ENV vars with config
-
-storescu -v --scan-directories -aet "${config_calling_ae}" \
-  -aec "${config_called_ae}" \
-  "${config_destination}" \
-  "${config_port}" \
-  "${dicom_input}" \
+  storescu -v --scan-directories -aet "${config_calling_ae}" \
+    -aec "${config_called_ae}" \
+    "${config_destination}" \
+    "${config_port}" \
+    "${dicom_input}" \
+done
