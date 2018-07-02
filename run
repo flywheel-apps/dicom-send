@@ -54,7 +54,7 @@ if [[  -z "$input_file" ]] ; then
   config_session_id="$(parse_config_file '.destination.id')"
   api_key="$(parse_config_file '.inputs.api_key.key')"
   echo -e "$CONTAINER No input file was found! Sending all dicoms in session"
-  python download_dicoms.py --api-key "${api_key}" --session "${config_session_id}" --input_dir $INPUT_DIR/file
+  python download_dicoms.py --api-key "${api_key}" --session "${config_session_id}" --input_dir "${INPUT_DIR}/file"
 fi
 
 for input_file in $INPUT_DIR/file/*; do
@@ -63,14 +63,18 @@ for input_file in $INPUT_DIR/file/*; do
 
     echo "$CONTAINER  Unzipping $input_file"
     dicom_input=$INPUT_DIR/$(unzip -Z -1 "${input_file}" | head -1)
-    unzip -q "$input_file" -d $INPUT_DIR
 
-    # Find unzipped directory in input dir
-    # dicom_input=$(find $INPUT_DIR/* -not -path '*/\.*' -type d | head -1)
-
-    # Zip bomb: Set dicom_input to INPUT_DIR
-    if [[ -z "$dicom_input" ]]; then
-      dicom_input=$INPUT_DIR
+    # If zip bomb, place the contents into its own folder named
+    # after the file's basename
+    tempdir=$(mktemp -d)
+    unzip -q "$input_file" -d $tempdir
+    if [ $(ls $tempdir | wc -l) = 1 ]; then
+      mv $tempdir/* $INPUT_DIR
+      rmdir $tempdir
+      dicom_input=$INPUT_DIR/$(unzip -Z -1 "${input_file}" | head -1)
+    else
+      dicom_input=${INPUT_DIR}/$(echo "$input_file" | cut -f 1 -d '.')
+      mv $tempdir "$dicom_input"
     fi
 
   elif [[ "$input_file" == *.gz ]]; then
