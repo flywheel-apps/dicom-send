@@ -10,7 +10,7 @@ def get_dicoms(fw, session, input_dir):
     for acq in acquisitions:
         for file_ in acq.get('files', []):
             if file_.type == 'dicom':
-                fw.download_file_from_acquisition(acq._id, file_.name,
+                fw.download_file_from_acquisition(acq.id, file_.name,
                                                   '{}/{}'.format(input_dir, file_.name))
 
 
