@@ -93,6 +93,9 @@ for input_file in $INPUT_DIR/file/*; do
     cp -a $input_file $INPUT_DIR
   fi
 
+  ##############################################################################
+  # Tag all of the files so that they are not re-reaped
+  python tagger.py $dicom_input -g '0x0021' -i 'Flywheel' -t 'DICOM Send'
 
   ##############################################################################
   # Run the storescu algorithm passing ENV vars with config
