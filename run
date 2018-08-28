@@ -98,6 +98,12 @@ for input_file in $INPUT_DIR/file/*; do
   ##############################################################################
   # Tag all of the files so that they are not re-reaped
   python tagger.py "$dicom_input" -g '0x0021' -i 'Flywheel' -t 'DICOM Send'
+  if [ $? -eq 0 ]; then
+    echo "$input_file tagged successfully"
+  else
+    echo "FAIL: unable to tag $input_file"
+    exit 1
+  fi
 
 
   ##############################################################################
