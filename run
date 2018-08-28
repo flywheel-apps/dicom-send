@@ -74,7 +74,9 @@ for input_file in $INPUT_DIR/file/*; do
       rmdir $tempdir
       dicom_input=$INPUT_DIR/$zip_fold
     else
-      dicom_input=${INPUT_DIR}/$(echo "$input_file" | cut -f 1 -d '.')
+      filename="${input_file##*/}"
+      extension="${filename##*.}"
+      dicom_input="${filename%.*}"
       mv $tempdir "$dicom_input"
     fi
 
@@ -95,7 +97,8 @@ for input_file in $INPUT_DIR/file/*; do
 
   ##############################################################################
   # Tag all of the files so that they are not re-reaped
-  python tagger.py $dicom_input -g '0x0021' -i 'Flywheel' -t 'DICOM Send'
+  python tagger.py "$dicom_input" -g '0x0021' -i 'Flywheel' -t 'DICOM Send'
+
 
   ##############################################################################
   # Run the storescu algorithm passing ENV vars with config
