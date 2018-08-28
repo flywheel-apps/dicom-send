@@ -62,18 +62,21 @@ for input_file in $INPUT_DIR/file/*; do
   if [[ "$input_file" == *.zip ]] ; then
 
     echo "$CONTAINER  Unzipping $input_file"
-    dicom_input=$INPUT_DIR/$(unzip -Z -1 "${input_file}" | head -1)
+    dicom_input=$INPUT_DIR
 
     # If zip bomb, place the contents into its own folder named
     # after the file's basename
     tempdir=$(mktemp -d)
     unzip -q "$input_file" -d $tempdir
     if [ $(ls $tempdir | wc -l) = 1 ]; then
+      zip_fold=$(ls "${tempdir}" | head -1)
       mv $tempdir/* $INPUT_DIR
       rmdir $tempdir
-      dicom_input=$INPUT_DIR/$(unzip -Z -1 "${input_file}" | head -1)
+      dicom_input=$INPUT_DIR/$zip_fold
     else
-      dicom_input=${INPUT_DIR}/$(echo "$input_file" | cut -f 1 -d '.')
+      filename="${input_file##*/}"
+      extension="${filename##*.}"
+      dicom_input="${filename%.*}"
       mv $tempdir "$dicom_input"
     fi
 
@@ -90,6 +93,16 @@ for input_file in $INPUT_DIR/file/*; do
 
     dicom_input=$INPUT_DIR
     cp -a $input_file $INPUT_DIR
+  fi
+
+  ##############################################################################
+  # Tag all of the files so that they are not re-reaped
+  python tagger.py "$dicom_input" -g '0x0021' -i 'Flywheel' -t 'DICOM Send'
+  if [ $? -eq 0 ]; then
+    echo "$input_file tagged successfully"
+  else
+    echo "FAIL: unable to tag $input_file"
+    exit 1
   fi
 
 
