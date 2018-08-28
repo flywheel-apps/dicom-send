@@ -7,7 +7,7 @@ class TagError(Exception):
     pass
 
 
-def add_send_tag(dicomfile, group, identifier, tag_value):
+def add_private_tag(dicomfile, group, identifier, tag_value):
     for elem_tag in range(0x0010, 0x00FF):
         dataelem = dicomfile.get((group, elem_tag))
         if dataelem:
@@ -18,20 +18,21 @@ def add_send_tag(dicomfile, group, identifier, tag_value):
                     private_elem = dicomfile.get(private_tag)
                     if not private_elem:
                         dicomfile.add_new(private_tag, 'LO', tag_value)
-                        return
+                        return dicomfile
                     elif private_elem.value.lower().startswith(tag_value.lower()):
-                        return
+                        return dicomfile
         else:
             identifier_tag = (group, elem_tag)
             dicomfile.add_new(identifier_tag, 'LO', identifier)
             private_tag = (group, elem_tag * 0x0100)
             dicomfile.add_new(private_tag, 'LO', tag_value)
-            return
+            return dicomfile
     raise TagError('No free element in group {} to tag the dicom'.format(group))
 
 
 def tag_image(file_path, group, identifier, tag_value):
-    add_send_tag(pydicom.dcmread(file_path), group, identifier, tag_value)
+    dicomfile = add_private_tag(pydicom.dcmread(file_path), group, identifier, tag_value)
+    dicomfile.save_as(file_path)
 
 
 def tag_folder(dir_path, group, identifier, tag_value):
@@ -42,14 +43,15 @@ def tag_folder(dir_path, group, identifier, tag_value):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='dicom-send tag')
-    parser.add_argument("dicom-input")
+    parser.add_argument("dicom")
     parser.add_argument('--group', '-g', type=str, required=True, help='The group of the private element tag')
     parser.add_argument('--identifier', '-i', type=str, required=True, help='Identifier')
     parser.add_argument('--tag-value', '-t', type=str, required=True, help='String to tag the dicom files')
 
     args = parser.parse_args()
+    args.group = int(args.group, 16)
 
-    if os.path.isdir(args.dicom_input):
-        tag_folder(args.dicom_input, args.group, args.identifier, args.tag_value)
+    if os.path.isdir(args.dicom):
+        tag_folder(args.dicom, args.group, args.identifier, args.tag_value)
     else:
-        tag_image(args.dicom_input, args.group, args.identifier, args.tag_value)
+        tag_image(args.dicom, args.group, args.identifier, args.tag_value)
