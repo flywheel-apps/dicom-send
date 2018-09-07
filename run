@@ -57,6 +57,8 @@ if [[  -z "$input_file" ]] ; then
   python download_dicoms.py --api-key "${api_key}" --session "${config_session_id}" --input_dir "${INPUT_DIR}/file"
 fi
 
+dicoms_sent=0
+
 for input_file in $INPUT_DIR/file/*; do
   # Prepare inputs: unzip, gunzip, or uncompressed
   if [[ "$input_file" == *.zip ]] ; then
@@ -92,7 +94,7 @@ for input_file in $INPUT_DIR/file/*; do
     # or single .dcm file
 
     dicom_input=$INPUT_DIR
-    cp -a $input_file $INPUT_DIR
+    cp -a "$input_file" $INPUT_DIR
   fi
 
   ##############################################################################
@@ -108,18 +110,28 @@ for input_file in $INPUT_DIR/file/*; do
 
   ##############################################################################
   # Run the storescu algorithm passing ENV vars with config
-
-  storescu -v --scan-directories -aet "${config_calling_ae}" \
-    -aec "${config_called_ae}" \
-    "${config_destination}" \
-    "${config_port}" \
-    "${dicom_input}" \
+  if [[ -n `dcmdump --scan-directories "${dicom_input}" | grep "(0008,0016)" | grep "="` ]]; then
+    storescu -v --scan-directories -aet "${config_calling_ae}" \
+      -aec "${config_called_ae}" \
+      "${config_destination}" \
+      "${config_port}" \
+      "${dicom_input}"
+  else
+    echo "WARNING: Skipping ${input_file} of unknown SOPClassUID"
+  fi
 
   if [ $? -eq 0 ]; then
     echo OK
+    ((dicoms_sent++))
   else
     echo "FAIL: $input_file"
-    exit 1
   fi
 
 done
+
+if (( $dicoms_sent < 1 )); then
+  echo "ERROR: No dicoms sent!"
+  exit 1
+else
+  echo OK
+fi
