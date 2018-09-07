@@ -110,28 +110,34 @@ for input_file in $INPUT_DIR/file/*; do
 
   ##############################################################################
   # Run the storescu algorithm passing ENV vars with config
+
+  # Check if the SOPClassUID is recognized by dcmtk dcmdump
   if [[ -n `dcmdump --scan-directories "${dicom_input}" | grep "(0008,0016)" | grep "="` ]]; then
     storescu -v --scan-directories -aet "${config_calling_ae}" \
       -aec "${config_called_ae}" \
       "${config_destination}" \
       "${config_port}" \
       "${dicom_input}"
-  else
-    echo "WARNING: Skipping ${input_file} of unknown SOPClassUID"
-  fi
 
-  if [ $? -eq 0 ]; then
-    echo OK
-    ((dicoms_sent++))
+    # Check that strocescu succeeded
+    if [ $? -eq 0 ]; then
+      echo OK
+      ((dicoms_sent++))
+    else
+      echo "FAIL: $input_file"
+    fi
   else
-    echo "FAIL: $input_file"
+    # Skip if not recognized
+    echo "WARNING: Skipping ${input_file} of unknown SOPClassUID"
   fi
 
 done
 
+# Only Fail if no dicoms were sent
 if (( $dicoms_sent < 1 )); then
   echo "ERROR: No dicoms sent!"
   exit 1
 else
+  echo "INFO: Sent ${dicoms_sent} dicoms"
   echo OK
 fi
