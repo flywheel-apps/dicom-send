@@ -31,6 +31,10 @@ def main():
     # Prep
     # Check API key - raises Error if key is invalid
     fw = flywheel.Flywheel(args.api_key)
+    user = fw.get_current_user()
+    if user.root:
+        print('Using site admin priviledges to download')
+        fw = flywheel.Flywheel(args.api_key, root=True)
 
     # Download dicoms
     get_dicoms(fw, args.session, args.input_dir)
