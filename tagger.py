@@ -38,8 +38,10 @@ def tag_image(file_path, group, identifier, tag_value):
 def tag_folder(dir_path, group, identifier, tag_value):
     tags = []
     for image_file in os.listdir(dir_path):
-        if '.dcm' in image_file:
+        try:
             tags.append(tag_image(os.path.join(dir_path, image_file), group, identifier, tag_value))
+        except pydicom.errors.InvalidDicomError:
+            continue
     return list(set(tags))
 
 
@@ -60,5 +62,7 @@ if __name__ == '__main__':
 
     if len(tags) > 1:
         print('WARNING: Tagged at different elements')
+    elif len(tags) == 0:
+        print('WARNING: No Dicoms were tagged!')
     else:
         print('INFO: Tagged at ({0:#x}, {1:#x})'.format(tags[0][0], tags[0][1]))
