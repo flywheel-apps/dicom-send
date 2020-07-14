@@ -44,9 +44,9 @@
   "source": "https://flywheel.io",
   "url": "http://support.dcmtk.org/docs/storescu.html",
   "custom": {
-    "docker-image": "flywheel/dicom-send:0.14.1"
-  },
-  "flywheel": {
-    "suite": "DCMTK"
+    "docker-image": "flywheel/dicom-send:0.14.1",
+      "flywheel": {
+      "suite": "DCMTK"
+    }
   }
 }
