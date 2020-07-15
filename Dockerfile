@@ -3,8 +3,8 @@ MAINTAINER Flywheel <support@flywheel.io>
 
 RUN apt-get update && apt-get install -y dcmtk jq unzip python2.7 python-pip
 
-RUN pip2 install flywheel-sdk
-RUN pip2 install pydicom>=1.1.0
+COPY requirements.txt ./requirements.txt
+RUN pip2 install -r requirements.txt
 
 # Make directory for flywheel spec (v0)
 ENV FLYWHEEL /flywheel/v0
