@@ -2,7 +2,7 @@
   "name": "dicom-send",
   "label": "DCMTK: DICOM Send",
   "description": "The DICOM Send Gear uses DCMTK storescu to send DICOM data from a Flywheel instance to a DICOM server. The DICOM server must be reachable from the host of the Flywheel instance.",
-  "version": "0.15.0_rc1",
+  "version": "0.15.0",
   "inputs": {
       "file": {
           "base": "file",
@@ -36,7 +36,7 @@
       "port": {
           "description": "Port number of the listening DICOM service. Default = 104",
           "type": "number",
-          "default": "104"
+          "default": 104
       }
   },
   "author": "Flywheel",
@@ -46,8 +46,8 @@
   "url": "http://support.dcmtk.org/docs/storescu.html",
   "custom": {
       "gear-builder": {
-          "category": "",
-          "image": "flywheel/dicom-send:0.15.0_rc1"
+          "category": "converter",
+          "image": "flywheel/dicom-send:0.15.0"
       },
       "flywheel": {
           "suite": "DCMTK"
