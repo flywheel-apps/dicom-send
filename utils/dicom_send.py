@@ -75,7 +75,7 @@ def prepare_work_dir_contents(infile, work_dir):
             pydicom.filereader.dcmread(infile, force=True)
             shutil.copy2(infile, work_dir)
         except pydicom.errors.InvalidDicomError:
-            log.info('Input file is not a valid DICOM file. Exiting.')
+            log.info("Input file is not a valid DICOM file. Exiting.")
             os.sys.exit(1)
 
     log.info("Input for dicom-send prepared successfully.")
@@ -101,17 +101,19 @@ def exit_if_archive_empty(archive_obj):
         os.sys.exit(1)
 
 
-def download_and_send(api_key,
-                      session_id,
-                      input_dir,
-                      work_dir,
-                      destination,
-                      called_ae,
-                      port=104,
-                      calling_ae='flywheel',
-                      group='0x0021',
-                      identifier='Flywheel',
-                      tag_value='DICOM Send'):
+def download_and_send(
+    api_key,
+    session_id,
+    input_dir,
+    work_dir,
+    destination,
+    called_ae,
+    port=104,
+    calling_ae="flywheel",
+    group="0x0021",
+    identifier="Flywheel",
+    tag_value="DICOM Send",
+):
     """Download files in the session where the file type is DICOM.
 
     Args:
@@ -135,7 +137,7 @@ def download_and_send(api_key,
         DICOMS_SENT (int): The number of DICOM files transmitted.
 
     """
-    log.info('Downloading DICOM files.')
+    log.info("Downloading DICOM files.")
     DATA_FLAG = False
     DICOMS_SENT = 0
 
@@ -157,15 +159,17 @@ def download_and_send(api_key,
                     # A file with file.type = dicom has been downloaded
                     DATA_FLAG = True
 
-                    dicoms_sent = run(file_path,
-                                      work_dir,
-                                      destination,
-                                      called_ae,
-                                      port,
-                                      calling_ae,
-                                      group,
-                                      identifier,
-                                      tag_value)
+                    dicoms_sent = run(
+                        file_path,
+                        work_dir,
+                        destination,
+                        called_ae,
+                        port,
+                        calling_ae,
+                        group,
+                        identifier,
+                        tag_value,
+                    )
                     DICOMS_SENT += dicoms_sent
 
                     # Remove contents of working directory because we assume multiple
@@ -174,23 +178,27 @@ def download_and_send(api_key,
                     os.mkdir(work_dir)
 
     if DATA_FLAG is False:
-        log.error("No DICOM files were available for download for session with ID: "
-                  f"{session_id}. The file.type must be set to dicom for download "
-                  "to occur. Exiting.")
+        log.error(
+            "No DICOM files were available for download for session with ID: "
+            f"{session_id}. The file.type must be set to dicom for download "
+            "to occur. Exiting."
+        )
         os.sys.exit(1)
 
     return DICOMS_SENT
 
 
-def run(infile,
-        work_dir,
-        destination,
-        called_ae,
-        port=104,
-        calling_ae='flywheel',
-        group='0x0021',
-        identifier='Flywheel',
-        tag_value='DICOM Send'):
+def run(
+    infile,
+    work_dir,
+    destination,
+    called_ae,
+    port=104,
+    calling_ae="flywheel",
+    group="0x0021",
+    identifier="Flywheel",
+    tag_value="DICOM Send",
+):
     """Run dicom-send, including tagging each DICOM file and transmitting.
 
     Args:
@@ -211,13 +219,8 @@ def run(infile,
     """
     prepare_work_dir_contents(infile, work_dir)
 
-    DICOMS_SENT = tag_and_transmit.run(work_dir,
-                                       destination,
-                                       called_ae,
-                                       port,
-                                       calling_ae,
-                                       group,
-                                       identifier,
-                                       tag_value)
+    DICOMS_SENT = tag_and_transmit.run(
+        work_dir, destination, called_ae, port, calling_ae, group, identifier, tag_value
+    )
 
     return DICOMS_SENT

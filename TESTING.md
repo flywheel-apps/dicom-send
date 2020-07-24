@@ -4,7 +4,7 @@ Below are instructions for testing the functionality of this gear locally.
 
 ## Set up a local DICOM server.
 
-Orthanc is an open-source, lightweight server. To download visit [Orthanc Server](download from https://www.osimis.io/en/download.html).
+Orthanc is an open-source, lightweight server. To download visit [Orthanc Server](https://www.osimis.io/en/download.html).
 
 After downloading and setup, you can open a browser to visualize the DICOM exchange, via http://localhost:8042/app/explorer.html
 

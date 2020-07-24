@@ -16,7 +16,7 @@ log = logging.getLogger()
 
 def main(gear_context):
     """Orchestrate dicom-send gear."""
-    log.info('Starting dicom-send gear.')
+    log.info("Starting dicom-send gear.")
 
     # Prepare gear arguments by parsing the gear configuration
     gear_args, download = parse_config.generate_gear_args(gear_context)
@@ -32,10 +32,10 @@ def main(gear_context):
 
     # Log number of DICOM files transmitted and exit accordingly
     if DICOMS_SENT == 0:
-        log.error('No DICOM files were transmitted. Exiting.')
+        log.error("No DICOM files were transmitted. Exiting.")
         os.sys.exit(1)
     else:
-        log.info(f'!!! TOTAL -- There were {DICOMS_SENT} DICOM files transmitted.')
+        log.info(f"!!! TOTAL -- There were {DICOMS_SENT} DICOM files transmitted.")
         exit_status = 0
         return exit_status
 

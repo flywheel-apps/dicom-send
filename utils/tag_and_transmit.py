@@ -11,14 +11,16 @@ import pydicom
 log = logging.getLogger(__name__)
 
 
-def run(work_dir,
-        destination,
-        called_ae,
-        port=104,
-        calling_ae='flywheel',
-        group='0x0021',
-        identifier='Flywheel',
-        tag_value='DICOM Send'):
+def run(
+    work_dir,
+    destination,
+    called_ae,
+    port=104,
+    calling_ae="flywheel",
+    group="0x0021",
+    identifier="Flywheel",
+    tag_value="DICOM Send",
+):
     """Run tag and transmit for each DICOM file in the working directory.
 
     Args:
@@ -49,10 +51,9 @@ def run(work_dir,
                 continue
 
             # Tag the DICOM file so it is not re-reaped
-            dicom_file, private_tag = add_private_tag(pydicom.dcmread(path, force=True),
-                                                      group,
-                                                      identifier,
-                                                      tag_value)
+            dicom_file, private_tag = add_private_tag(
+                pydicom.dcmread(path, force=True), group, identifier, tag_value
+            )
             log.info(f"DICOM file {path.name} has been successfully tagged.")
             dicom_file.save_as(path)
 
@@ -60,28 +61,26 @@ def run(work_dir,
             try:
                 SOPClassUID = dicom_file[0x008, 0x0016].value
             except KeyError:
-                log.error(f"Transmission of DICOM file {path.name} not "
-                          "attempted. Unable to establish SOPClassUID.")
+                log.error(
+                    f"Transmission of DICOM file {path.name} not "
+                    "attempted. Unable to establish SOPClassUID."
+                )
                 continue
 
-            if isinstance(SOPClassUID, type('pydicom.uid.UID')):
+            if isinstance(SOPClassUID, type("pydicom.uid.UID")):
                 # Transmit DICOM file to server specified
-                dicom_transmitted = transmit_dicom_file(path,
-                                                        destination,
-                                                        called_ae,
-                                                        port,
-                                                        calling_ae)
+                dicom_transmitted = transmit_dicom_file(
+                    path, destination, called_ae, port, calling_ae
+                )
             if dicom_transmitted:
                 dicoms_sent += 1
 
     return dicoms_sent
 
 
-def transmit_dicom_file(dicom_file_path,
-                        destination,
-                        called_ae,
-                        port=104,
-                        calling_ae='flywheel'):
+def transmit_dicom_file(
+    dicom_file_path, destination, called_ae, port=104, calling_ae="flywheel"
+):
     """Transmit DICOM file to specified receiving server.
 
     Args:
@@ -95,7 +94,7 @@ def transmit_dicom_file(dicom_file_path,
     Returns:
         dicom_transmitted (bool): TWhether the DICOM file was transmitted successfully.
     """
-    log.info('Begin DICOM file transfer.')
+    log.info("Begin DICOM file transfer.")
     dicom_transmitted = False
 
     # Create command
@@ -114,14 +113,14 @@ def transmit_dicom_file(dicom_file_path,
     log.info(f"Command to be executed: \n\n{log_command}\n")
 
     # Transmit DICOM file via DCMTK's storescu
-    process = subprocess.Popen(command,
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE)
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = process.communicate()
 
     if process.returncode != 0:
-        log.error(f"Transmission of DICOM file {dicom_file_path.name} using DCMTK's "
-                  f"storescu failed with return code {process.returncode}.")
+        log.error(
+            f"Transmission of DICOM file {dicom_file_path.name} using DCMTK's "
+            f"storescu failed with return code {process.returncode}."
+        )
         log.error(f"STDERR: {stderr}")
     else:
         log.info(f"Successful transmission of DICOM file {dicom_file_path.name}.")
@@ -130,10 +129,9 @@ def transmit_dicom_file(dicom_file_path,
     return dicom_transmitted
 
 
-def add_private_tag(dicom_file,
-                    group='0x0021',
-                    identifier='Flywheel',
-                    tag_value='DICOM Send'):
+def add_private_tag(
+    dicom_file, group="0x0021", identifier="Flywheel", tag_value="DICOM Send"
+):
     """Add a private tag to a DICOM file.
 
     Args:
@@ -163,24 +161,28 @@ def add_private_tag(dicom_file,
             if data_elem.value.lower() == identifier.lower():
 
                 for private_tag_element in range(
-                                                 data_elem.tag.elem * 0x0100,
-                                                 data_elem.tag.elem * 0x0100 + 0x0100
-                                                 ):
+                    data_elem.tag.elem * 0x0100, data_elem.tag.elem * 0x0100 + 0x0100
+                ):
 
                     private_tag = (data_elem.tag.group, private_tag_element)
                     private_elem = dicom_file.get(private_tag)
 
                     if not private_elem:
                         dicom_file.add_new(private_tag, "LO", tag_value)
-                        tag_formatted = "{0:#x}, {1:#x}".format(private_tag[0],
-                                                                private_tag[1])
-                        log.info(f"Tag: {tag_value} added to DICOM file at "
-                                 f"{tag_formatted}")
+                        tag_formatted = "{0:#x}, {1:#x}".format(
+                            private_tag[0], private_tag[1]
+                        )
+                        log.info(
+                            f"Tag: {tag_value} added to DICOM file at "
+                            f"{tag_formatted}"
+                        )
                         return dicom_file, private_tag
 
                     elif private_elem.value.lower().startswith(tag_value.lower()):
-                        log.warning(f"Tag: {tag_value} already exists in {dicom_file}. "
-                                    "Will continue to transmit DICOM file.")
+                        log.warning(
+                            f"Tag: {tag_value} already exists in {dicom_file}. "
+                            "Will continue to transmit DICOM file."
+                        )
                         return dicom_file, private_tag
 
         # If the identifier tag has not been created, we create the identifier tag.
@@ -188,13 +190,12 @@ def add_private_tag(dicom_file,
         else:
             identifier_tag = (group, elem_tag)
             dicom_file.add_new(identifier_tag, "LO", identifier)
-            log.info(f'Identifier tag, {identifier}, added to DICOM file.')
+            log.info(f"Identifier tag, {identifier}, added to DICOM file.")
 
             private_tag = (group, elem_tag * 0x0100)
             dicom_file.add_new(private_tag, "LO", tag_value)
-            tag_formatted = "{0:#x}, {1:#x}".format(private_tag[0],
-                                                    private_tag[1])
-            log.info(f'Tag: {tag_value} added to DICOM file at {tag_formatted}')
+            tag_formatted = "{0:#x}, {1:#x}".format(private_tag[0], private_tag[1])
+            log.info(f"Tag: {tag_value} added to DICOM file at {tag_formatted}")
 
             return dicom_file, private_tag
 
