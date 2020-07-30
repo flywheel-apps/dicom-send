@@ -13,7 +13,7 @@ The [DICOM Toolkit](https://support.dcmtk.org/docs/) (DCMTK) is a set of softwar
 
 ### Gear Inputs
 
-* **file**: Any DICOM file(s), or an archive containing DICOM file(s). Non DICOM files are ignored. If no input is provided, all DICOM files in the session, determined from the `destination` configuration setting, are submitted for transmission.
+* **file**: Any DICOM file or an archive (zip or tar) containing DICOM file(s). Non DICOM files are ignored. If no input is provided, all DICOM files in the session where the Gear is executed are downloaded and used as input.
 * **api_key**: Gear will acquire the read-only API key for downloading DICOMs from the session when no input **file** is provided.
 
 
@@ -26,6 +26,6 @@ The [DICOM Toolkit](https://support.dcmtk.org/docs/) (DCMTK) is a set of softwar
 
 # Workflow
 
-1. *Acquire Inputs*. If an input is not provided, all DICOMs in the session determined from the `destination` configuration setting are downloaded and set as input for the next stage.
+1. *Acquire Inputs*. If the **file** input is not provided, all files of DICOM type in the session where the Gear is executed are downloaded and set as input for the next stage.
 2. *Prepare Inputs*. DICOMs packaged into archives (.tgz or .zip) are uncompressed. A private tag is then added to each DICOM file to be transmitted.
 3. *Transmit DICOMs*. The final stage transmits each DICOM file to the DICOM server indicated during Gear configuration.

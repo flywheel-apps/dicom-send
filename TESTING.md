@@ -1,8 +1,8 @@
 
-# Local testing
-Below are instructions for testing the functionality of this gear locally.
+# Local Testing
+Below are instructions for testing the functionality of this Gear locally.
 
-## Set up a local DICOM server.
+## Setup a DICOM server
 
 Orthanc is an open-source, lightweight server. To download visit [Orthanc Server](https://www.osimis.io/en/download.html).
 
@@ -64,4 +64,4 @@ Below is the template of the local config file (JSON file), set with default Ort
 If you are testing locally, you have two options.
 
 1. Input file to be passed into the Docker image; an example is provided here: dicom-send/tests/assets/image1.dcm
-2. Set an API Key and Session ID, which also requires the creation of /flywheel/v0/input where the Gear will download DICOM data from the specified Session ID. This behavior is handled natively by Flywheel and is only required for local testing.
+2. Set an API Key and Session ID.
