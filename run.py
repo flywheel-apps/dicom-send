@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
 """Main script for dicom-send gear."""
 
-import logging
 import os
 
-import flywheel
+import flywheel_gear_toolkit
 
 from utils import parse_config
 from utils import dicom_send
-
-FORMAT = "[%(asctime)s - %(levelname)s - %(name)s:%(lineno)d] %(message)s"
-logging.basicConfig(level=logging.INFO, format=FORMAT, datefmt="%Y-%m-%d")
-log = logging.getLogger()
 
 
 def main(gear_context):
@@ -42,7 +37,9 @@ def main(gear_context):
 
 if __name__ == "__main__":
 
-    with flywheel.GearContext() as gear_context:
+    with flywheel_gear_toolkit.GearToolkitContext() as gear_context:
+
+        log = gear_context.log
         exit_status = main(gear_context)
 
     log.info(f"Successful dicom-send gear execution with exit status {exit_status}.")
