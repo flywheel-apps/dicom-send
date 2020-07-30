@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Main script for dicom-send gear."""
 
+import logging
 import os
 
 import flywheel_gear_toolkit

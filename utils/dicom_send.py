@@ -141,6 +141,11 @@ def download_and_send(
     DATA_FLAG = False
     DICOMS_SENT = 0
 
+    # Create input directory if it doesn't exist
+    if not Path(input_dir).is_dir():
+        os.mkdir(input_dir)
+    
+    # Instantiate instance connection and load acquisitions in session
     fw = flywheel.Client(api_key)
     acquisitions = fw.get_session_acquisitions(session_id)
 

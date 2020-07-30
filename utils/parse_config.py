@@ -23,21 +23,22 @@ def generate_gear_args(gear_context):
     }
 
     # Input is a tgz or zip DICOM archive, or a single DICOM file
-    infile = Path(gear_context.get_input_path("file"))
+    try:
+        infile = Path(gear_context.get_input_path("file"))
+        download = not infile.is_file()
+    except TypeError:
+        download = True
+        log.info("No input provided. Will use files of type DICOM from session.")
 
-    if infile.is_file():
-
+    if download is False:
         gear_args["infile"] = infile
-        download = False
 
     else:
-
         # Alternatively, if no input is provided, all DICOM files in the session are
         # downloaded and used as input
         gear_args["session_id"] = gear_context.destination["id"]
         gear_args["api_key"] = gear_context.get_input("api_key")["key"]
         gear_args["input_dir"] = "/flywheel/v0/input"
-        download = True
 
     gear_args_formatted = pprint.pformat(gear_args)
     log.info(f"Prepared gear stage arguments: \n\n{gear_args_formatted}\n")
