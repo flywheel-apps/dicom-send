@@ -31,7 +31,6 @@ The dicom-send gear can be run locally with the following command.
 docker run -it --rm \
     -v /path/to/config:/flywheel/v0/config.json \
     flywheel/dicom-send
-
 ```
 
 The `-v` flag in the above command mounts a local config file to the correct path within the Docker container.
@@ -61,3 +60,8 @@ Below is the template of the local config file (JSON file), set with default Ort
   }
 }
 ```
+
+If you are testing locally, you have two options.
+
+1. Input file to be passed into the Docker image; an example is provided here: dicom-send/tests/assets/image1.dcm
+2. Set an API Key and Session ID, which also requires the creation of /flywheel/v0/input where the Gear will download DICOM data from the specified Session ID. This behavior is handled natively by Flywheel and is only required for local testing.
