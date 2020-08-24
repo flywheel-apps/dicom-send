@@ -11,6 +11,7 @@ import pydicom
 import flywheel
 
 from utils import tag_and_transmit
+from utils import report_generator
 
 
 log = logging.getLogger(__name__)
@@ -159,12 +160,14 @@ def download_and_send(
 
                 file_path = Path(f"{input_dir}/{file.name}")
                 fw.download_file_from_acquisition(acq.id, file.name, file_path)
-
+    
                 if file_path.is_file():
                     # A file with file.type = dicom has been downloaded
                     DATA_FLAG = True
 
                     dicoms_sent = run(
+                        fw,
+                        acq.id,
                         file_path,
                         work_dir,
                         destination,
@@ -194,6 +197,8 @@ def download_and_send(
 
 
 def run(
+    fw,
+    parent_acq,
     infile,
     work_dir,
     destination,
@@ -224,8 +229,12 @@ def run(
     """
     prepare_work_dir_contents(infile, work_dir)
 
-    DICOMS_SENT = tag_and_transmit.run(
+    DICOMS_PRESENT, DICOMS_SENT = tag_and_transmit.run(
         work_dir, destination, called_ae, port, calling_ae, group, identifier, tag_value
     )
 
+    report_generator.generate_report(fw, parent_acq, infile.name, DICOMS_PRESENT, DICOMS_SENT)
+    
+    
+    
     return DICOMS_SENT

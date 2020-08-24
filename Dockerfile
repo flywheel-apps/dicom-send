@@ -22,3 +22,5 @@ COPY manifest.json ${FLYWHEEL}/manifest.json
 ADD utils ${FLYWHEEL}/utils
 COPY run.py ${FLYWHEEL}/run.py
 RUN chmod +x ${FLYWHEEL}/run.py
+
+ENTRYPOINT /bin/bash

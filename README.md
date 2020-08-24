@@ -29,3 +29,7 @@ The [DICOM Toolkit](https://support.dcmtk.org/docs/) (DCMTK) is a set of softwar
 1. *Acquire Inputs*. If the **file** input is not provided, all files of DICOM type in the session where the Gear is executed are downloaded and set as input for the next stage.
 2. *Prepare Inputs*. DICOMs packaged into archives (.tgz or .zip) are uncompressed. A private tag is then added to each DICOM file to be transmitted.
 3. *Transmit DICOMs*. The final stage transmits each DICOM file to the DICOM server indicated during Gear configuration.
+
+# Testing
+
+For information on gear testing, see the [testing readme](https://github.com/flywheel-apps/dicom-send/blob/master/TESTING.md).
