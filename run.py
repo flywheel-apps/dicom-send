@@ -29,7 +29,7 @@ def main(gear_context):
         
         DICOMS_SENT = dicom_send.run(fw, **gear_args)
     
-    report_generator.upload_report(fw, gear_args.get('parent_acq'), gear_args.get('session_id'))
+    report_generator.upload_report(fw, gear_args.get('session_id'), gear_args.get('parent_acq'))
     
     # Log number of DICOM files transmitted and exit accordingly
     if DICOMS_SENT == 0:
