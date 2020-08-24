@@ -194,4 +194,4 @@ def upload_report(fw, ses_id, acq_id=None,
     ses.upload_file(new_file)
     
     log.info(f"Report file {new_name} uploaded to session {ses.label}")
-    print_report(report_file)
+    print_report(new_file)
