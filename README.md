@@ -32,4 +32,4 @@ The [DICOM Toolkit](https://support.dcmtk.org/docs/) (DCMTK) is a set of softwar
 
 # Testing
 
-For information on gear testing, see the [testing readme](https://github.com/flywheel-apps/dicom-send/blob/master/TESTING.md).
+For information on gear testing, see the [testing readme](TESTING.md).
