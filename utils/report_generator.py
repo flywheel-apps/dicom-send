@@ -208,7 +208,7 @@ def upload_report(
 
     timestamp = datetime.now()
 
-    new_name = f"{new_name}_{timestamp.strftime('%Y-%m-%d_%H:%M:%S')}.csv"
+    new_name = f"dicom-send_report-{new_name}_{timestamp.strftime('%Y-%m-%d_%H:%M:%S')}.csv"
     new_file = report_file.parent / new_name
 
     os.rename(report_file, new_file)
