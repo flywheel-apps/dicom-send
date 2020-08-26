@@ -39,6 +39,7 @@ def run(
 
     """
     dicoms_sent = 0
+    dicoms_present = 0
 
     for path in Path(work_dir).rglob("*"):
 
@@ -49,7 +50,9 @@ def run(
                 pydicom.dcmread(path, force=True)
             except pydicom.errors.InvalidDicomError:
                 continue
-
+            
+            dicoms_present += 1
+            
             # Tag the DICOM file so it is not re-reaped
             dicom_file, private_tag = add_private_tag(
                 pydicom.dcmread(path, force=True), group, identifier, tag_value
@@ -75,7 +78,7 @@ def run(
             if dicom_transmitted:
                 dicoms_sent += 1
 
-    return dicoms_sent
+    return dicoms_present, dicoms_sent
 
 
 def transmit_dicom_file(

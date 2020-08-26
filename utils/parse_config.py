@@ -32,6 +32,8 @@ def generate_gear_args(gear_context):
 
     if download is False:
         gear_args["infile"] = infile
+        gear_args["parent_acq"] = gear_context.get_input("file")["hierarchy"].get("id")
+        gear_args["session_id"] = gear_context.destination["id"]
 
     else:
         # Alternatively, if no input is provided, all DICOM files in the session are

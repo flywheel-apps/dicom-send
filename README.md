@@ -24,8 +24,30 @@ The [DICOM Toolkit](https://support.dcmtk.org/docs/) (DCMTK) is a set of softwar
 * **calling_ae**: The Calling AE title. Default = flywheel.
 * **port**: Port number of the listening DICOM service. Default = 104.
 
+### Gear outputs
+
+The gear will generate a report listing each dicom file/archive that was exported.  The report includes the following columns:
+* ***Acquisition ID:*** the FW Acquisition ID
+* ***FW Path:*** a human readable flywheel path to the file that was exported, in the following format:
+    * <group>/<project.label>/<subject.label>/<session.label>/<acquisition.label>/files/<file.name>
+* ***Filename:*** Name of the file/archive that was sent
+* ***Images in Series:*** Number of images in the series to be sent
+* ***Images Sent:*** Number of images successfully sent
+* ***Status:*** “Complete” if images in series == Images Sent, “Incomplete” if Images Sent < Images in Series, “Failed” if Images Sent == 0.
+
+This report is printed at the end of the log file, and also saved as an attachment to the session container that the gear was run from.
+The output name of this report file follows the following pattern:
+
+`dicom-send_report-<session label>_<acquisition label>_YYYY-MM-DD_HH:MM:SS.csv`
+where `<acquisition_label>` is only present if one specific acquisition was selected for export
+
+
 # Workflow
 
 1. *Acquire Inputs*. If the **file** input is not provided, all files of DICOM type in the session where the Gear is executed are downloaded and set as input for the next stage.
 2. *Prepare Inputs*. DICOMs packaged into archives (.tgz or .zip) are uncompressed. A private tag is then added to each DICOM file to be transmitted.
 3. *Transmit DICOMs*. The final stage transmits each DICOM file to the DICOM server indicated during Gear configuration.
+
+# Testing
+
+For information on gear testing, see the [testing readme](TESTING.md).
