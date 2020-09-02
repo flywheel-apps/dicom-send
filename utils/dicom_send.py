@@ -103,7 +103,7 @@ def exit_if_archive_empty(archive_obj):
 
 
 def download_and_send(
-    api_key,
+    fw,
     session_id,
     input_dir,
     work_dir,
@@ -147,7 +147,7 @@ def download_and_send(
         os.mkdir(input_dir)
     
     # Instantiate instance connection and load acquisitions in session
-    fw = flywheel.Client(api_key)
+    #fw = flywheel.Client(api_key)
     acquisitions = fw.get_session_acquisitions(session_id)
 
     # In a session, the possible downloads include any combination of:
