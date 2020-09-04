@@ -12,29 +12,24 @@ from utils import dicom_send
 from utils import report_generator
 
 
-def main(fw, gear_context):
+def main(gear_context):
     """Orchestrate dicom-send gear."""
     log.info("Starting dicom-send gear.")
 
     # Prepare gear arguments by parsing the gear configuration
-    gear_args, session_id, download, input_dir, api_key =\
-        parse_config.generate_gear_args(fw, gear_context)
-    fw = flywheel.Client(gear_context.get_input("api_key")["key"])
+    gear_args, download = parse_config.generate_gear_args(gear_context)
 
+    
     # Run dicom-send
     if download is True:
-
-        DICOMS_SENT = dicom_send.download_and_send(fw,
-                                                   session_id=session_id,
-                                                   input_dir=input_dir,
-                                                   **gear_args)
+        DICOMS_SENT = dicom_send.download_and_send(**gear_args)
+        session_id = gear_args['session_id']
 
     elif download is False:
-        DICOMS_SENT = dicom_send.run(fw, **gear_args)
-
-    report_generator.upload_report(
-        fw, session_id, gear_args.get("parent_acq")
-    )
+        session_id = gear_args.pop('session_id')
+        DICOMS_SENT = dicom_send.run(**gear_args)
+        
+    report_generator.upload_report(gear_args['api_key'], session_id, gear_args.get('parent_acq'))
 
     # Log number of DICOM files transmitted and exit accordingly
     if DICOMS_SENT == 0:
@@ -49,10 +44,8 @@ def main(fw, gear_context):
 if __name__ == "__main__":
 
     with flywheel_gear_toolkit.GearToolkitContext() as gear_context:
-        api_key = gear_context.get_input("api_key")["key"]
-        fw = flywheel.Client(api_key)
         gear_context.init_logging()
         log = gear_context.log
-        exit_status = main(fw, gear_context)
+        exit_status = main(gear_context)
 
     log.info(f"Successful dicom-send gear execution with exit status {exit_status}.")

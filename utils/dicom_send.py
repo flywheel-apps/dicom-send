@@ -103,7 +103,7 @@ def exit_if_archive_empty(archive_obj):
 
 
 def download_and_send(
-    fw,
+    api_key,
     session_id,
     input_dir,
     work_dir,
@@ -145,9 +145,9 @@ def download_and_send(
     # Create input directory if it doesn't exist
     if not Path(input_dir).is_dir():
         os.mkdir(input_dir)
-    
+
     # Instantiate instance connection and load acquisitions in session
-    #fw = flywheel.Client(api_key)
+    fw = flywheel.Client(api_key)
     acquisitions = fw.get_session_acquisitions(session_id)
 
     # In a session, the possible downloads include any combination of:
@@ -166,7 +166,7 @@ def download_and_send(
                     DATA_FLAG = True
 
                     dicoms_sent = run(
-                        fw,
+                        api_key,
                         acq.id,
                         file_path,
                         work_dir,
@@ -197,7 +197,7 @@ def download_and_send(
 
 
 def run(
-    fw,
+    api_key,
     parent_acq,
     infile,
     work_dir,
@@ -212,6 +212,9 @@ def run(
     """Run dicom-send, including tagging each DICOM file and transmitting.
 
     Args:
+        api_key (str): The API key required to access the session in a Flywheel
+            instance.
+        parent_acq(str)
         infile (pathlib.PosixPath): The absolute path to the input file.
         work_dir (pathlib.PosixPath): The absolute path to the working directory where
             the DICOM files are placed.
@@ -233,7 +236,7 @@ def run(
         work_dir, destination, called_ae, port, calling_ae, group, identifier, tag_value
     )
 
-    report_generator.generate_report(fw, parent_acq, infile.name, DICOMS_PRESENT, DICOMS_SENT)
+    report_generator.generate_report(api_key, parent_acq, infile.name, DICOMS_PRESENT, DICOMS_SENT)
     
     
     

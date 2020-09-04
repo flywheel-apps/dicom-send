@@ -4,6 +4,8 @@ from csv import writer, reader
 from datetime import datetime
 from pathlib import Path
 
+import flywheel
+
 log = logging.getLogger(__name__)
 
 
@@ -47,7 +49,7 @@ def initialize_report(file_name):
     append_list_as_row(file_name, header)
 
 
-def make_flywheel_path(fw, acq_id, file_name):
+def make_flywheel_path(api_key, acq_id, file_name):
     """Generate a human readable path to a flywheel file.
     
     This function generates a path to a given file in the format:
@@ -55,7 +57,7 @@ def make_flywheel_path(fw, acq_id, file_name):
     The path is built using as few flywheel client calls as possible.
     
     Args:
-        fw (flywheel.Client()): the flywheel client of the current session.
+        api_key (str): The API key required to access a Flywheel instance.
         acq_id (str): the flywheel ID of the parent acquisition of the target file.
         file_name (str): the target filename.
 
@@ -64,7 +66,9 @@ def make_flywheel_path(fw, acq_id, file_name):
     <group label>/<project label>/<subject label>/<session label>/<acquisition label>/<file name>
 
     """
-
+    
+    fw = flywheel.Client(api_key)
+    
     acq = fw.get_acquisition(acq_id)
     ses_id = acq.session
     group = fw.get_group(acq.parents.group)
@@ -79,14 +83,14 @@ def make_flywheel_path(fw, acq_id, file_name):
     return fw_path
 
 
-def generate_list(fw, acq_id, file_name, DICOM_PRESENT, DICOM_SENT):
+def generate_list(api_key, acq_id, file_name, DICOM_PRESENT, DICOM_SENT):
     """Generate the list of items to be appended to the report .csv for a given DICOM export
     
     The order of items in the list corresponds to the order of the headers specified in
     initialize_report()
     
     Args:
-        fw (flywheel.Client()): the flywheel client of the current session
+        api_key (str): The API key required to access a Flywheel instance.
         acq_id (str): the flywheel ID of the parent acquisition of the target file
         file_name (str): the name of the target file
         DICOM_PRESENT (int): the number of DICOM images present in the target file
@@ -96,7 +100,7 @@ def generate_list(fw, acq_id, file_name, DICOM_PRESENT, DICOM_SENT):
         report_list (list): The list of items to append to the report .csv file
     """
 
-    fw_path = make_flywheel_path(fw, acq_id, file_name)
+    fw_path = make_flywheel_path(api_key, acq_id, file_name)
 
     if DICOM_PRESENT > DICOM_SENT:
         status = "Incomplete"
@@ -111,7 +115,7 @@ def generate_list(fw, acq_id, file_name, DICOM_PRESENT, DICOM_SENT):
 
 
 def generate_report(
-    fw,
+    api_key,
     acq_id,
     file_name,
     DICOMS_PRESENT,
@@ -121,7 +125,7 @@ def generate_report(
     """Writes status information of the current DICOM upload to a report .csv file
     
     Args:
-        fw (flywheel.Client()): the flywheel client for the current session
+        api_key (str): The API key required to access a Flywheel instance.
         acq_id (str): the flywheel ID of the parent acquisition of the target file
         file_name (str): the name of the target file
         DICOM_PRESENT (int): the number of DICOM images present in the target file
@@ -131,6 +135,7 @@ def generate_report(
     Returns:
         None.
     """
+    
 
     if not os.path.exists(work_dir):
         os.makedirs(work_dir)
@@ -142,7 +147,7 @@ def generate_report(
         initialize_report(report_file)
 
     log.debug("Writing to report")
-    new_row = generate_list(fw, acq_id, file_name, DICOMS_PRESENT, DICOMS_SENT)
+    new_row = generate_list(api_key, acq_id, file_name, DICOMS_PRESENT, DICOMS_SENT)
     log.info(new_row)
     append_list_as_row(report_file, new_row)
 
@@ -178,7 +183,7 @@ def print_report(report_file):
 
 
 def upload_report(
-    fw,
+    api_key,
     ses_id,
     acq_id=None,
     report_file=Path("/flywheel/v0/report/dicom-send-report.csv"),
@@ -189,7 +194,7 @@ def upload_report(
     for export, the acquisition label is included too.
     
     Args:
-        fw (flywheel.Client()): the flywheel client for the current session
+        api_key (str): The API key required to access a Flywheel instance.
         acq_id (str): the flywheel ID of the parent acquisition of the target file
         ses_id (str): the flywheel ID of the parent session of the target file
         report_file (pathlib.PosixPath): the name of the target file
@@ -198,7 +203,9 @@ def upload_report(
         None.
 
     """
-
+    
+    fw = flywheel.Client(api_key)
+    
     ses = fw.get_session(ses_id)
     new_name = ses.label
 
