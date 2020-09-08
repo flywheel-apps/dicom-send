@@ -1,8 +1,10 @@
 import logging
 import os
+import re
 from csv import writer, reader
 from datetime import datetime
 from pathlib import Path
+from pathvalidate import sanitize_filename
 
 import flywheel
 
@@ -215,11 +217,33 @@ def upload_report(
 
     timestamp = datetime.now()
 
-    new_name = f"dicom-send_report-{new_name}_{timestamp.strftime('%Y-%m-%d_%H:%M:%S')}.csv"
-    new_file = report_file.parent / new_name
+    new_name = f"dicom-send_report-{new_name}_{timestamp.strftime('%Y-%m-%d_%H-%M-%S')}.csv"
+    safe_name = get_sanitized_filename(new_name)
+    new_file = report_file.parent / safe_name
 
     os.rename(report_file, new_file)
     ses.upload_file(new_file)
 
     log.info(f"Report file {new_name} uploaded to session {ses.label}")
     print_report(new_file)
+
+
+def get_sanitized_filename(filename):
+    """A function for removing characters that are not alphanumeric, '.', '-', or '_' from an input string.
+        asterix following "t2" + optional space/underscore  will be replaced with "star"
+    Args:
+        filename (str): an input string
+    Returns:
+        str: A string without characters that are not alphanumeric, '.', '-', or '_'
+    """
+
+    try:
+        log
+    except NameError:
+        log = logging.getLogger(__name__)
+    filename = re.sub(r"(t2 ?_?)\*", r"\1star", str(filename), flags=re.IGNORECASE)
+    sanitized_filename = sanitize_filename(filename)
+    if filename != sanitized_filename:
+        log.info(f'Renaming {filename} to {sanitized_filename}')
+
+    return sanitized_filename
