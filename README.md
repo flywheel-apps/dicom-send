@@ -39,7 +39,9 @@ This report is printed at the end of the log file, and also saved as an attachme
 The output name of this report file follows the following pattern:
 
 `dicom-send_report-<session label>_<acquisition label>_YYYY-MM-DD_HH:MM:SS.csv`
-where `<acquisition_label>` is only present if one specific acquisition was selected for export
+where `<acquisition_label>` is only present if one specific acquisition was selected for export.
+
+Images are considered successfully sent if `storescu` returns a "0" exit code.
 
 
 # Workflow

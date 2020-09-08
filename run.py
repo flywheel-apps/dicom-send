@@ -18,20 +18,18 @@ def main(gear_context):
 
     # Prepare gear arguments by parsing the gear configuration
     gear_args, download = parse_config.generate_gear_args(gear_context)
-    fw = flywheel.Client(gear_context.get_input("api_key")["key"])
 
+    
     # Run dicom-send
     if download is True:
-
         DICOMS_SENT = dicom_send.download_and_send(**gear_args)
+        session_id = gear_args['session_id']
 
     elif download is False:
-
-        DICOMS_SENT = dicom_send.run(fw, **gear_args)
-
-    report_generator.upload_report(
-        fw, gear_args.get("session_id"), gear_args.get("parent_acq")
-    )
+        session_id = gear_args.pop('session_id')
+        DICOMS_SENT = dicom_send.run(**gear_args)
+        
+    report_generator.upload_report(gear_args['api_key'], session_id, gear_args.get('parent_acq'))
 
     # Log number of DICOM files transmitted and exit accordingly
     if DICOMS_SENT == 0:

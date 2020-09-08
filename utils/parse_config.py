@@ -4,24 +4,29 @@ import logging
 import pprint
 from pathlib import Path
 
+import flywheel
+
 log = logging.getLogger(__name__)
 
 
 def generate_gear_args(gear_context):
     """Generate gear arguments."""
     log.info("Preparing arguments for dicom-send gear.")
-
-    gear_args = {
+    gear_kwargs = {
+        "work_dir": gear_context.work_dir,
         "destination": gear_context.config["destination"],
-        "port": gear_context.config["port"],
         "called_ae": gear_context.config["called_ae"],
+        "port": gear_context.config["port"],
         "calling_ae": gear_context.config["calling_ae"],
         "group": "0x0021",
         "identifier": "Flywheel",
         "tag_value": "DICOM Send",
-        "work_dir": gear_context.work_dir,
+        'api_key': gear_context.get_input("api_key")["key"]
     }
-
+    
+    fw = flywheel.Client(gear_kwargs['api_key'])
+    
+    
     # Input is a tgz or zip DICOM archive, or a single DICOM file
     try:
         infile = Path(gear_context.get_input_path("file"))
@@ -31,18 +36,22 @@ def generate_gear_args(gear_context):
         log.info("No input provided. Will use files of type DICOM from session.")
 
     if download is False:
-        gear_args["infile"] = infile
-        gear_args["parent_acq"] = gear_context.get_input("file")["hierarchy"].get("id")
-        gear_args["session_id"] = gear_context.destination["id"]
+        gear_kwargs["infile"] = infile
+        gear_kwargs["parent_acq"] = gear_context.get_input("file")["hierarchy"].get("id")
+        # When a file is provided as input, destination ID is the acquisition ID
+        gear_kwargs['session_id'] = fw.get_acquisition(gear_kwargs["parent_acq"]).parents.session
 
     else:
         # Alternatively, if no input is provided, all DICOM files in the session are
         # downloaded and used as input
-        gear_args["session_id"] = gear_context.destination["id"]
-        gear_args["api_key"] = gear_context.get_input("api_key")["key"]
-        gear_args["input_dir"] = "/flywheel/v0/input"
-
-    gear_args_formatted = pprint.pformat(gear_args)
+        # In this case the destination ID is the session ID.
+        gear_kwargs['session_id'] = gear_context.destination["id"]
+        gear_kwargs['input_dir'] = "/flywheel/v0/input"
+        
+    
+    print_kwargs = dict(gear_kwargs)
+    print_kwargs.pop('api_key')
+    gear_args_formatted = pprint.pformat(print_kwargs)
     log.info(f"Prepared gear stage arguments: \n\n{gear_args_formatted}\n")
 
-    return gear_args, download
+    return gear_kwargs, download
