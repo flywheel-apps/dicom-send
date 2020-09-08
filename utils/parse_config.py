@@ -38,16 +38,20 @@ def generate_gear_args(gear_context):
     if download is False:
         gear_kwargs["infile"] = infile
         gear_kwargs["parent_acq"] = gear_context.get_input("file")["hierarchy"].get("id")
+        # When a file is provided as input, destination ID is the acquisition ID
         gear_kwargs['session_id'] = fw.get_acquisition(gear_kwargs["parent_acq"]).parents.session
 
     else:
         # Alternatively, if no input is provided, all DICOM files in the session are
         # downloaded and used as input
+        # In this case the destination ID is the session ID.
         gear_kwargs['session_id'] = gear_context.destination["id"]
         gear_kwargs['input_dir'] = "/flywheel/v0/input"
+        
     
-    
-    gear_args_formatted = pprint.pformat(gear_kwargs)
+    print_kwargs = dict(gear_kwargs)
+    print_kwargs.pop('api_key')
+    gear_args_formatted = pprint.pformat(print_kwargs)
     log.info(f"Prepared gear stage arguments: \n\n{gear_args_formatted}\n")
 
     return gear_kwargs, download

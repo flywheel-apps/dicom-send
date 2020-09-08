@@ -214,7 +214,7 @@ def run(
     Args:
         api_key (str): The API key required to access the session in a Flywheel
             instance.
-        parent_acq(str)
+        parent_acq(str): The ID of the acquisition that the "infile" came from.
         infile (pathlib.PosixPath): The absolute path to the input file.
         work_dir (pathlib.PosixPath): The absolute path to the working directory where
             the DICOM files are placed.
