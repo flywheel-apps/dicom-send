@@ -224,7 +224,7 @@ def upload_report(
     os.rename(report_file, new_file)
     ses.upload_file(new_file)
 
-    log.info(f"Report file {new_name} uploaded to session {ses.label}")
+    log.info(f"Report file {safe_name} uploaded to session {ses.label}")
     print_report(new_file)
 
 
