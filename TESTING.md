@@ -16,6 +16,8 @@ storescu -aec ORTHANC localhost 4242 *.dcm
 - Orthanc can act both as a C-Store client (SCU) or as a C-Store server (SCP). In other words, it can either send or receive DICOM files. In the case of this Gear, we setup the server as the receiver. For more information, see the [Orthanc Server Book](https://book.orthanc-server.com/index.html
 ).
 
+- **NOTE:** You may need to set up port forwarding on your router so that the DICOM port (default '4242') is routed to your machine's IP address.  
+
 
 ## Build the Image
 To build the image:
