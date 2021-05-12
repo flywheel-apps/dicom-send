@@ -1,6 +1,7 @@
 """Functions to tag and transmit DICOM files as part of the dicom-send Gear."""
 
 import logging
+import backoff
 import os
 import subprocess
 from pathlib import Path
@@ -9,6 +10,9 @@ import pydicom
 
 
 log = logging.getLogger(__name__)
+
+class TemporaryFailure(Exception):
+    pass
 
 
 def run(
@@ -72,15 +76,19 @@ def run(
 
             if isinstance(SOPClassUID, type("pydicom.uid.UID")):
                 # Transmit DICOM file to server specified
-                dicom_transmitted = transmit_dicom_file(
-                    path, destination, called_ae, port, calling_ae
-                )
+                try:
+                    dicom_transmitted = transmit_dicom_file(
+                        path, destination, called_ae, port, calling_ae
+                    )
+                except TemporaryFailure:
+                    log.error('Could not export '+path.name)
+
             if dicom_transmitted:
                 dicoms_sent += 1
 
     return dicoms_present, dicoms_sent
 
-
+@backoff.on_exception(backoff.expo, TemporaryFailure, max_time=60)
 def transmit_dicom_file(
     dicom_file_path, destination, called_ae, port=104, calling_ae="flywheel"
 ):
@@ -96,6 +104,9 @@ def transmit_dicom_file(
 
     Returns:
         dicom_transmitted (bool): TWhether the DICOM file was transmitted successfully.
+
+    Raises:
+        TemporaryFailure: If there is a temporary failure in the storescu command.
     """
     log.info("Begin DICOM file transfer.")
     dicom_transmitted = False
@@ -125,6 +136,14 @@ def transmit_dicom_file(
             f"storescu failed with return code {process.returncode}."
         )
         log.error(f"STDERR: {stderr}")
+        # Unfortunately storescu doesn't return specific error codes, always 1 if there is an error
+        # The dicom standard specifies particular numbers to return for this error:
+        # http://dicom.nema.org/medical/dicom/2014c/output/chtml/part02/sect_H.4.2.2.4.html
+        # But these aren't returned from storescu's stderr
+        # Best way to get this is to parse stderr
+        out = stderr.decode('utf-8')
+        if 'Temporary Congestion' in out:
+            raise TemporaryFailure()
     else:
         log.info(f"Successful transmission of DICOM file {dicom_file_path.name}.")
         dicom_transmitted = True
