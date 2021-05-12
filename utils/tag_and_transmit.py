@@ -141,7 +141,7 @@ def transmit_dicom_file(
         # http://dicom.nema.org/medical/dicom/2014c/output/chtml/part02/sect_H.4.2.2.4.html
         # But these aren't returned from storescu's stderr
         # Best way to get this is to parse stderr
-        out = stderr.encode('utf-8')
+        out = stderr.decode('utf-8')
         if 'Temporary Congestion' in out:
             raise TemporaryFailure()
     else:
