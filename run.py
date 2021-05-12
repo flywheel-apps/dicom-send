@@ -34,10 +34,10 @@ def main(gear_context):
     # Log number of DICOM files transmitted and exit accordingly
     if DICOMS_SENT == 0:
         log.error("No DICOM files were transmitted. Exiting.")
-        os.sys.exit(1)
+         os.sys.exit(1)
     elif DICOMS_SENT < DICOMS_PRESENT:
         log.error("Not all DICOMS were successfully transmitted. Please check report.")
-        return 1
+         os.sys.exit(1)
     else:
         log.info(f"!!! TOTAL -- There were {DICOMS_SENT} DICOM files transmitted.")
         exit_status = 0
