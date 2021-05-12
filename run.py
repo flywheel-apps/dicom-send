@@ -19,7 +19,7 @@ def main(gear_context):
     # Prepare gear arguments by parsing the gear configuration
     gear_args, download = parse_config.generate_gear_args(gear_context)
 
-    
+
     # Run dicom-send
     if download is True:
         DICOMS_PRESENT, DICOMS_SENT = dicom_send.download_and_send(**gear_args)
@@ -28,13 +28,13 @@ def main(gear_context):
     elif download is False:
         session_id = gear_args.pop('session_id')
         DICOMS_PRESENT, DICOMS_SENT = dicom_send.run(**gear_args)
-        
+
     report_generator.upload_report(gear_args['api_key'], session_id, gear_args.get('parent_acq'))
 
     # Log number of DICOM files transmitted and exit accordingly
     if DICOMS_SENT == 0:
         log.error("No DICOM files were transmitted. Exiting.")
-         os.sys.exit(1)
+        os.sys.exit(1)
     elif DICOMS_SENT < DICOMS_PRESENT:
         log.error("Not all DICOMS were successfully transmitted. Please check report.")
         os.sys.exit(1)
