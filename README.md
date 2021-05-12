@@ -43,6 +43,8 @@ where `<acquisition_label>` is only present if one specific acquisition was sele
 
 Images are considered successfully sent if `storescu` returns a "0" exit code.
 
+The gear will present as successful only if all dicoms that were attempted, were sent succesfully.
+
 
 # Workflow
 
