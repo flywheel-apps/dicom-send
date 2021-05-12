@@ -135,12 +135,15 @@ def download_and_send(
         tag_value (str): The value to associate the private tag with.
 
     Returns:
-        DICOMS_SENT (int): The number of DICOM files transmitted.
+        tuple:
+            DICOMS_PRESENT (int): The number of DICOM files for which transmission was attempted.
+            DICOMS_SENT (int): The number of DICOM files transmitted.
 
     """
     log.info("Downloading DICOM files.")
     DATA_FLAG = False
     DICOMS_SENT = 0
+    DICOMS_PRESENT = 0
 
     # Create input directory if it doesn't exist
     if not Path(input_dir).is_dir():
@@ -165,7 +168,7 @@ def download_and_send(
                     # A file with file.type = dicom has been downloaded
                     DATA_FLAG = True
 
-                    dicoms_sent = run(
+                    dicoms_present, dicoms_sent = run(
                         api_key,
                         acq.id,
                         file_path,
@@ -179,6 +182,7 @@ def download_and_send(
                         tag_value,
                     )
                     DICOMS_SENT += dicoms_sent
+                    DICOMS_PRESENT += dicoms_present
 
                     # Remove contents of working directory because we assume multiple
                     # downloaded files and need a clean workspace for each run.
@@ -193,7 +197,7 @@ def download_and_send(
         )
         os.sys.exit(1)
 
-    return DICOMS_SENT
+    return DICOMS_PRESENT, DICOMS_SENT
 
 
 def run(
@@ -227,7 +231,9 @@ def run(
         tag_value (str): The value to associate the private tag with.
 
     Returns:
-        DICOMS_SENT (int): The number of DICOM files transmitted.
+        tuple:
+            DICOMS_PRESENT (int): The number of DICOM files for which transmission was attempted.
+            DICOMS_SENT (int): The number of DICOM files transmitted.
 
     """
     prepare_work_dir_contents(infile, work_dir)
@@ -240,4 +246,4 @@ def run(
     
     
     
-    return DICOMS_SENT
+    return DICOMS_PRESENT, DICOMS_SENT

@@ -22,12 +22,12 @@ def main(gear_context):
     
     # Run dicom-send
     if download is True:
-        DICOMS_SENT = dicom_send.download_and_send(**gear_args)
+        DICOMS_PRESENT, DICOMS_SENT = dicom_send.download_and_send(**gear_args)
         session_id = gear_args['session_id']
 
     elif download is False:
         session_id = gear_args.pop('session_id')
-        DICOMS_SENT = dicom_send.run(**gear_args)
+        DICOMS_PRESENT, DICOMS_SENT = dicom_send.run(**gear_args)
         
     report_generator.upload_report(gear_args['api_key'], session_id, gear_args.get('parent_acq'))
 
@@ -35,6 +35,9 @@ def main(gear_context):
     if DICOMS_SENT == 0:
         log.error("No DICOM files were transmitted. Exiting.")
         os.sys.exit(1)
+    elif DICOMS_SENT < DICOMS_PRESENT:
+        log.error("Not all DICOMS were successfully transmitted. Please check report.")
+        return 1
     else:
         log.info(f"!!! TOTAL -- There were {DICOMS_SENT} DICOM files transmitted.")
         exit_status = 0
