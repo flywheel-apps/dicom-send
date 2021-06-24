@@ -54,9 +54,9 @@ def run(
                 pydicom.dcmread(path, force=True)
             except pydicom.errors.InvalidDicomError:
                 continue
-            
+
             dicoms_present += 1
-            
+
             # Tag the DICOM file so it is not re-reaped
             dicom_file, private_tag = add_private_tag(
                 pydicom.dcmread(path, force=True), group, identifier, tag_value
@@ -112,6 +112,7 @@ def transmit_dicom_file(
     dicom_transmitted = False
 
     # Create command
+    # add flag for config file.
     command = ["storescu"]
     command.append("-v")
     command.append("--scan-directories")
