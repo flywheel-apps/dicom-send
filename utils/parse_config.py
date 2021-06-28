@@ -20,13 +20,13 @@ def generate_gear_args(gear_context):
         "calling_ae": gear_context.config["calling_ae"],
         "group": "0x0021",
         "identifier": "Flywheel",
-        "tag_value": "DICOM Send",
+        "tag_value": "DICOM Send - CHOP",
         'api_key': gear_context.get_input("api_key")["key"]
     }
-    
+
     fw = flywheel.Client(gear_kwargs['api_key'])
-    
-    
+
+
     # Input is a tgz or zip DICOM archive, or a single DICOM file
     try:
         infile = Path(gear_context.get_input_path("file"))
@@ -47,8 +47,8 @@ def generate_gear_args(gear_context):
         # In this case the destination ID is the session ID.
         gear_kwargs['session_id'] = gear_context.destination["id"]
         gear_kwargs['input_dir'] = "/flywheel/v0/input"
-        
-    
+
+
     print_kwargs = dict(gear_kwargs)
     print_kwargs.pop('api_key')
     gear_args_formatted = pprint.pformat(print_kwargs)

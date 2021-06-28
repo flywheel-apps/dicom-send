@@ -23,11 +23,7 @@ ADD utils ${FLYWHEEL}/utils
 COPY run.py ${FLYWHEEL}/run.py
 RUN chmod +x ${FLYWHEEL}/run.py
 
-COPY storescu.cfg /tmp/storescu.cfg
-ADD tests/assets ${FLYWHEEL}/test_data
+# Copy custom dcmtk config
+COPY storescu.cfg /etc/dcmtk/storescu.cfg
 
-COPY tests/test_send.sh ${FLYWHEEL}/test_send.sh
-RUN chmod +x ${FLYWHEEL}/test_send.sh
-
-# ENTRYPOINT /bin/bash
-CMD ["/bin/bash"]
+ENTRYPOINT /bin/bash

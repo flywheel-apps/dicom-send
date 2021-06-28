@@ -119,6 +119,7 @@ def transmit_dicom_file(
     command.append("-aet")
     command.append(calling_ae)
     command.append("-aec")
+    command.extend(["-xf", "/etc/dcmtk/storescu.cfg", "Default"])
     command.append(called_ae)
     command.append(destination)
     command.append(str(port))
