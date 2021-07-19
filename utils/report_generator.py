@@ -74,8 +74,8 @@ def make_flywheel_path(api_key, acq_id, file_name):
     acq = fw.get_acquisition(acq_id)
     ses_id = acq.session
     group = fw.get_group(acq.parents.group)
-    project = group.projects.find(f"_id={acq.parents.project}")[0]
-    session = project.sessions.find(f"_id={acq.parents.session}")[0]
+    project = fw.get_project(acq.parents.project)
+    session = fw.get_session(acq.parents.session)
 
     fw_path = (
         f"{group.label}/{project.label}/{session.subject.label}/{session.label}/"
