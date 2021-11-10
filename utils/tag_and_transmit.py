@@ -24,6 +24,7 @@ def run(
     group="0x0021",
     identifier="Flywheel",
     tag_value="DICOM Send",
+    pm=False
 ):
     """Run tag and transmit for each DICOM file in the working directory.
 
@@ -37,6 +38,8 @@ def run(
         group (str): The DICOM tag group to use when applying tag to DICOM file.
         identifier (str): The private tag creator name to use as identification.
         tag_value (str): The value to associate the private tag with.
+        pm (bool): "promiscuous mode", attempt to send DICOMS with unrecognized SOPs
+
 
     Returns:
         DICOMS_SENT (int): The number of DICOM files transmitted.
@@ -78,7 +81,7 @@ def run(
                 # Transmit DICOM file to server specified
                 try:
                     dicom_transmitted = transmit_dicom_file(
-                        path, destination, called_ae, port, calling_ae
+                        path, destination, called_ae, port, calling_ae, pm
                     )
                 except TemporaryFailure:
                     log.error('Could not export '+path.name)
@@ -90,7 +93,7 @@ def run(
 
 @backoff.on_exception(backoff.expo, TemporaryFailure, max_time=60)
 def transmit_dicom_file(
-    dicom_file_path, destination, called_ae, port=104, calling_ae="flywheel"
+    dicom_file_path, destination, called_ae, port=104, calling_ae="flywheel", pm=False
 ):
     """Transmit DICOM file to specified receiving server.
 
@@ -101,6 +104,8 @@ def transmit_dicom_file(
         called_ae (str):The Called AE title of the receiving DICOM server.
         port (int) = Port number of the listening DICOM service.
         calling_ae (str): The Calling AE title.
+        pm (bool): "promiscuous mode", attempt to send DICOMS with unrecognized SOPs
+
 
     Returns:
         dicom_transmitted (bool): TWhether the DICOM file was transmitted successfully.
@@ -115,6 +120,10 @@ def transmit_dicom_file(
     command = ["storescu"]
     command.append("-v")
     command.append("--scan-directories")
+
+    if pm:
+        command.append("-pm")
+
     command.append("-aet")
     command.append(calling_ae)
     command.append("-aec")

@@ -21,7 +21,8 @@ def generate_gear_args(gear_context):
         "group": "0x0021",
         "identifier": "Flywheel",
         "tag_value": "DICOM Send",
-        'api_key': gear_context.get_input("api_key")["key"]
+        'api_key': gear_context.get_input("api_key")["key"],
+        "pm": gear_context.config["send unrecognized SOP"]
     }
     
     fw = flywheel.Client(gear_kwargs['api_key'])

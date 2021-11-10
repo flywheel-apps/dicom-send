@@ -114,6 +114,7 @@ def download_and_send(
     group="0x0021",
     identifier="Flywheel",
     tag_value="DICOM Send",
+    pm=False
 ):
     """Download files in the session where the file type is DICOM.
 
@@ -133,6 +134,8 @@ def download_and_send(
         group (str): The DICOM tag group to use when applying tag to DICOM file.
         identifier (str): The private tag creator name to use as identification.
         tag_value (str): The value to associate the private tag with.
+        pm (bool): "promiscuous mode", attempt to send DICOMS with unrecognized SOPs
+
 
     Returns:
         tuple:
@@ -180,6 +183,7 @@ def download_and_send(
                         group,
                         identifier,
                         tag_value,
+                        pm
                     )
                     DICOMS_SENT += dicoms_sent
                     DICOMS_PRESENT += dicoms_present
@@ -212,6 +216,7 @@ def run(
     group="0x0021",
     identifier="Flywheel",
     tag_value="DICOM Send",
+    pm=False
 ):
     """Run dicom-send, including tagging each DICOM file and transmitting.
 
@@ -229,6 +234,7 @@ def run(
         group (str): The DICOM tag group to use when applying tag to DICOM file.
         identifier (str): The private tag creator name to use as identification.
         tag_value (str): The value to associate the private tag with.
+        pm (bool): "permiscuous mode", attempt to send DICOMS with unrecognized SOPs
 
     Returns:
         tuple:
@@ -239,7 +245,7 @@ def run(
     prepare_work_dir_contents(infile, work_dir)
 
     DICOMS_PRESENT, DICOMS_SENT = tag_and_transmit.run(
-        work_dir, destination, called_ae, port, calling_ae, group, identifier, tag_value
+        work_dir, destination, called_ae, port, calling_ae, group, identifier, tag_value, pm
     )
 
     report_generator.generate_report(api_key, parent_acq, infile.name, DICOMS_PRESENT, DICOMS_SENT)
