@@ -53,7 +53,7 @@
   "custom": {
       "gear-builder": {
           "category": "converter",
-          "image": "flywheel/dicom-send:2.1.1"
+          "image": "flywheel/dicom-send:2.1.2"
       },
       "flywheel": {
           "suite": "DCMTK"
