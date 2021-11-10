@@ -78,6 +78,7 @@ def run(
                 continue
 
             if isinstance(SOPClassUID, type("pydicom.uid.UID")):
+                dicom_transmitted = False
                 # Transmit DICOM file to server specified
                 try:
                     dicom_transmitted = transmit_dicom_file(
@@ -86,8 +87,8 @@ def run(
                 except TemporaryFailure:
                     log.error('Could not export '+path.name)
 
-            if dicom_transmitted:
-                dicoms_sent += 1
+                if dicom_transmitted:
+                    dicoms_sent += 1
 
     return dicoms_present, dicoms_sent
 
