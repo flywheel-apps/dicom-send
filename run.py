@@ -2,14 +2,15 @@
 """Main script for dicom-send gear."""
 
 import logging
-import os
+import sys
 
-import flywheel
 import flywheel_gear_toolkit
 
-from utils import parse_config
-from utils import dicom_send
-from utils import report_generator
+from fw_gear_dicom_send import parser
+from fw_gear_dicom_send import dicom_send
+from fw_gear_dicom_send import report_generator
+
+log = logging.getLogger(__name__)
 
 
 def main(gear_context):
@@ -17,29 +18,34 @@ def main(gear_context):
     log.info("Starting dicom-send gear.")
 
     # Prepare gear arguments by parsing the gear configuration
-    gear_args, download = parse_config.generate_gear_args(gear_context)
+    gear_args, download, tls = parser.generate_gear_args(gear_context)
+    dcms_present, dcms_sent = 0, 0
 
-
+    gear_args['tls'] = tls
     # Run dicom-send
+    session_id = None
     if download is True:
-        DICOMS_PRESENT, DICOMS_SENT = dicom_send.download_and_send(**gear_args)
+        dcms_present, dcms_sent = dicom_send.download_and_send(**gear_args)
         session_id = gear_args['session_id']
 
     elif download is False:
         session_id = gear_args.pop('session_id')
-        DICOMS_PRESENT, DICOMS_SENT = dicom_send.run(**gear_args)
+        dcms_present, dcms_sent = dicom_send.run(**gear_args)
 
     report_generator.upload_report(gear_args['api_key'], session_id, gear_args.get('parent_acq'))
 
     # Log number of DICOM files transmitted and exit accordingly
-    if DICOMS_SENT == 0:
+    if dcms_sent == 0:
         log.error("No DICOM files were transmitted. Exiting.")
-        os.sys.exit(1)
-    elif DICOMS_SENT < DICOMS_PRESENT:
-        log.error("Not all DICOMS were successfully transmitted. Please check report.")
-        os.sys.exit(1)
+        sys.exit(1)
+    elif dcms_sent < dcms_present:
+        log.error(
+            "Not all DICOMS were successfully transmitted "
+            f"({dcms_sent}/{dcms_present}). Please check report."
+        )
+        sys.exit(1)
     else:
-        log.info(f"!!! TOTAL -- There were {DICOMS_SENT} DICOM files transmitted.")
+        log.info(f"!!! TOTAL -- There were {dcms_sent} DICOM files transmitted.")
         exit_status = 0
         return exit_status
 
@@ -48,7 +54,6 @@ if __name__ == "__main__":
 
     with flywheel_gear_toolkit.GearToolkitContext() as gear_context:
         gear_context.init_logging()
-        log = gear_context.log
         exit_status = main(gear_context)
 
-    log.info(f"Successful dicom-send gear execution with exit status {exit_status}.")
+    log.info(f"Dicom-send gear execution with exit status {exit_status}.")

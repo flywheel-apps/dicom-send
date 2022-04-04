@@ -1,6 +1,6 @@
 {
   "name": "dicom-send",
-  "label": "DCMTK: DICOM Send",
+  "label": "DICOM Send",
   "description": "DICOM Send utilizes DCMTK's storescu to send DICOM data from a Flywheel instance to a destination DICOM server, hosted externally. This Gear supports the transmission of individual DICOM files and archives, as well as the transmission of an entire session when a specific input is not provided. Note that a private tag is added to each DICOM file to be transmitted (Flywheel:DICOM Send, at group 0x0021). Importantly, the external DICOM server must be reachable from the engine host of the Flywheel instance.",
   "version": "2.1.1",
   "inputs": {
@@ -12,6 +12,18 @@
                   "dicom"
               ]
           },
+          "optional": true
+      },
+      "key": {
+          "description": "TLS key.  Needed if tls is enabled",
+          "optional": true
+      },
+      "cert": {
+          "description": "TLS cert.  Needed if tls is enabled.",
+          "optional": true
+      },
+      "add_cert_file": {
+          "description": "Optional Cert file to add to list of certificates",
           "optional": true
       },
       "api_key": {
@@ -37,6 +49,46 @@
           "description": "Port number of the listening DICOM service. Default = 104",
           "type": "number",
           "default": 104
+      },
+      "tls_enabled": {
+          "description": "Enable or disable TLS normal or anonymous",
+          "type": "string",
+          "default": "disabled",
+          "enum": [
+              "disabled",
+              "enabled",
+              "anonymous"
+          ]
+      },
+      "tls_use_pem": {
+          "description": "Use PEM format (True) or DER format (False). Default PEM (True)",
+          "type": "boolean",
+          "default": true
+      },
+      "tls_security_profile": {
+          "description": "TLS security profile to use, default BCP 195",
+          "type": "string",
+          "default": "BCP195",
+          "enum": [
+            "BCP195",
+            "BCP195_nd",
+            "BCP195_ex"
+          ]
+      },
+      "tls_require_peer_cert": {
+          "description": "Verify peer certificate, fail if absent",
+          "type": "boolean",
+          "default": true
+      },
+      "tls_ciphers": {
+          "description": "Comma separated list of ciphers to add to the default list.",
+          "type": "string",
+          "default": ""
+      },
+      "tls_seed": {
+          "description": "Seed for TLS cipher Pseudo-RNGs",
+          "type": "string",
+          "default": ""
       }
   },
   "author": "Flywheel",
@@ -46,7 +98,7 @@
   "url": "http://support.dcmtk.org/docs/storescu.html",
   "custom": {
       "gear-builder": {
-          "category": "converter",
+          "category": "utility",
           "image": "flywheel/dicom-send:2.1.1"
       },
       "flywheel": {

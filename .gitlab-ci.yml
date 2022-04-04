@@ -1,0 +1,9 @@
+include:
+  - project: flywheel-io/tools/etc/qa-ci
+    ref: d6d71c49e61d29a6610d3d4acd9eec2301043b77
+    file: ci/gears.yml
+
+publish:poetry:
+  variables:
+    # Set to true to publish to pip on tags
+    PUBLISH_POETRY: "false"

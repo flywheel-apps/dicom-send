@@ -1,0 +1,13 @@
+repos:
+  - repo: https://gitlab.com/flywheel-io/tools/etc/qa-ci
+    rev: d6d71c49e61d29a6610d3d4acd9eec2301043b77
+    hooks:
+      - id: test:flywheel-lint
+      - id: test:helm-check
+      - id: test:pre-commit:isort
+        # Comment out the following line if you don't want typing
+      - id: test:pre-commit:mypy
+      - id: test:pre-commit:pylint
+      - id: test:pre-commit:pylint-tests
+      - id: test:pre-commit:pytest
+      - id: publish:docker:test

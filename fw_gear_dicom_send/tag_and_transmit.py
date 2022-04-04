@@ -2,11 +2,16 @@
 
 import logging
 import backoff
-import os
 import subprocess
+import sys
 from pathlib import Path
 
-import pydicom
+from fw_file.dicom import DICOM, DICOMCollection
+from pydicom.datadict import keyword_for_tag
+from pydicom.tag import Tag
+from pydicom.uid import UID
+
+from .parser import TLSOpt
 
 
 log = logging.getLogger(__name__)
@@ -14,11 +19,35 @@ log = logging.getLogger(__name__)
 class TemporaryFailure(Exception):
     pass
 
+def is_dcm(dcm: DICOM) -> bool:
+    """Look at a potential dicom and see whether it actually is a dicom.
+
+    Args:
+        dcm (DICOM): DICOM
+
+    Returns:
+        bool: True if it probably is a dicom, False if not
+    """
+    num_pub_tags = 0
+    keys = dcm.dir()
+    for key in keys:
+        try:
+            if Tag(tag_for_keyword(key)).group > 2:  # type: ignore
+                num_pub_tags += 1
+        except (AttributeError, TypeError):
+            continue
+    # Require two public tags outside the file_meta group.
+    if num_pub_tags > 1:
+        return True
+    log.debug(f"Removing: {dcm}. Not a DICOM")
+    return False
+
 
 def run(
     work_dir,
     destination,
     called_ae,
+    tls: TLSOpt,
     port=104,
     calling_ae="flywheel",
     group="0x0021",
@@ -32,6 +61,7 @@ def run(
             the DICOM files are placed.
         destination (str):The IP address or hostname of the destination DICOM server.
         called_ae (str):The Called AE title of the receiving DICOM server.
+        tls (TLSOpt): TLS options
         port (int) = Port number of the listening DICOM service.
         calling_ae (str): The Calling AE title.
         group (str): The DICOM tag group to use when applying tag to DICOM file.
@@ -44,62 +74,59 @@ def run(
     """
     dicoms_sent = 0
     dicoms_present = 0
+    dcms = DICOMCollection.from_dir(work_dir, filter_fn=is_dcm, force=True)
 
-    for path in Path(work_dir).rglob("*"):
+    for dcm in dcms:
+        # If DICOM file, then proceed, otherwise, continue to next item in directory
+        dicoms_present += 1
 
-        if path.is_file():
+        # Tag the DICOM file so it is not re-reaped
+        _ = add_private_tag(
+            dcm, group, identifier, tag_value
+        )
+        log.info(f"DICOM file {dcm.localpath.name} has been successfully tagged.")
+        dcm.save()
 
-            # If DICOM file, then proceed, otherwise, continue to next item in directory
-            try:
-                pydicom.dcmread(path, force=True)
-            except pydicom.errors.InvalidDicomError:
-                continue
-            
-            dicoms_present += 1
-            
-            # Tag the DICOM file so it is not re-reaped
-            dicom_file, private_tag = add_private_tag(
-                pydicom.dcmread(path, force=True), group, identifier, tag_value
+        # Check if the SOPClassUID is recognized
+        sop_class_uid = dcm.get('SOPClassUID')
+        if not sop_class_uid:
+            log.error(
+                f"Transmission of DICOM file {dcm.localpath.name} not "
+                "attempted. Unable to establish SOPClassUID."
             )
-            log.info(f"DICOM file {path.name} has been successfully tagged.")
-            dicom_file.save_as(path)
+            continue
 
-            # Check if the SOPClassUID is recognized
-            try:
-                SOPClassUID = dicom_file[0x008, 0x0016].value
-            except KeyError:
-                log.error(
-                    f"Transmission of DICOM file {path.name} not "
-                    "attempted. Unable to establish SOPClassUID."
-                )
-                continue
+        dicom_transmitted = False
+        # Transmit DICOM file to server specified
+        try:
+            dicom_transmitted = transmit_dicom_file(
+                dcm.localpath, destination, called_ae, tls, port, calling_ae
+            )
+        except TemporaryFailure:
+            log.error('Could not export '+dcm.localpath.name)
 
-            if isinstance(SOPClassUID, type("pydicom.uid.UID")):
-                dicom_transmitted = False
-                # Transmit DICOM file to server specified
-                try:
-                    dicom_transmitted = transmit_dicom_file(
-                        path, destination, called_ae, port, calling_ae
-                    )
-                except TemporaryFailure:
-                    log.error('Could not export '+path.name)
-
-                if dicom_transmitted:
-                    dicoms_sent += 1
+        if dicom_transmitted:
+            dicoms_sent += 1
 
     return dicoms_present, dicoms_sent
 
 @backoff.on_exception(backoff.expo, TemporaryFailure, max_time=60)
 def transmit_dicom_file(
-    dicom_file_path, destination, called_ae, port=104, calling_ae="flywheel"
+    dicom_file_path,
+    destination,
+    called_ae,
+    tls: TLSOpt,
+    port=104,
+    calling_ae="flywheel",
 ):
     """Transmit DICOM file to specified receiving server.
 
     Args:
-        dicom_file_path (pathlib.PosixPath): The absolute path to the DICOM file to
+        coll (pathlib.PosixPath): The absolute path to the DICOM file to
             be transmitted.
         destination (str):The IP address or hostname of the destination DICOM server.
         called_ae (str):The Called AE title of the receiving DICOM server.
+        tls (TLSOpt): TLS options
         port (int) = Port number of the listening DICOM service.
         calling_ae (str): The Calling AE title.
 
@@ -116,6 +143,7 @@ def transmit_dicom_file(
     command = ["storescu"]
     command.append("-v")
     command.append("--scan-directories")
+    command.extend(tls.command())
     command.append("-aet")
     command.append(calling_ae)
     command.append("-aec")
@@ -158,7 +186,7 @@ def add_private_tag(
     """Add a private tag to a DICOM file.
 
     Args:
-        dicom_file (pydicom.FileDataset): An instance of FileDataset that represents
+        dicom_file (DICOM): An instance of FileDataset that represents
             a parsed DICOM file.
         group (str): The DICOM tag group to use when applying tag to DICOM file.
         identifier (str): The private tag creator name to use as identification.
@@ -199,14 +227,14 @@ def add_private_tag(
                             f"Tag: {tag_value} added to DICOM file at "
                             f"{tag_formatted}"
                         )
-                        return dicom_file, private_tag
+                        return private_tag
 
                     elif private_elem.value.lower().startswith(tag_value.lower()):
                         log.warning(
                             f"Tag: {tag_value} already exists in {dicom_file}. "
                             "Will continue to transmit DICOM file."
                         )
-                        return dicom_file, private_tag
+                        return private_tag
 
         # If the identifier tag has not been created, we create the identifier tag.
         # In addition, we add the tag value.
@@ -220,9 +248,9 @@ def add_private_tag(
             tag_formatted = "{0:#x}, {1:#x}".format(private_tag[0], private_tag[1])
             log.info(f"Tag: {tag_value} added to DICOM file at {tag_formatted}")
 
-            return dicom_file, private_tag
+            return private_tag
 
     # If no tag can be added to the DICOM file, log and exit
     if private_tag is None:
         log.error("No free element in group to tag the DICOM file")
-        os.sys.exit(1)
+        sys.exit(1)
