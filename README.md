@@ -1,3 +1,6 @@
+THIS REPOSITORY IS ARCHIVE.  
+Please refer to https://gitlab.com/flywheel-io/flywheel-apps/dicom-send for the new active repo.
+
 [![Docker Pulls](https://img.shields.io/docker/pulls/flywheel/dicom-send.svg)](https://hub.docker.com/r/flywheel/dicom-send/)
 [![Docker Stars](https://img.shields.io/docker/stars/flywheel/dicom-send.svg)](https://hub.docker.com/r/flywheel/dicom-send/)
 
